@@ -13,6 +13,13 @@
 
 脚本的 `@downloadURL` 和 `@updateURL` 使用同一固定地址。是否以及何时更新取决于 wBlock 版本和设置；更新后请检查已安装的脚本。该地址跟随仓库 `main` 分支，并非固定发行版；导入或更新前请检查变化，并确保信任发布者。
 
+## 首页参数仍然存在时
+
+1. 更新**已经安装的那一份**脚本，将其中的 `@version` 与[最新发行版](https://github.com/lifanultra/Google-Search-Redirect/releases/latest)核对。GitHub 上线不等于管理器已获取新版，也不会替换已打开 Safari 页面中正在运行的旧代码。
+2. 确认地区站与 `www.google.com` 都有 Scripts 扩展权限，并保持 `cleanAddressBar: true`。只开启内容拦截器不会执行本脚本。
+3. 重新加载页面或新开标签，不要只返回原来的缓存标签。先试 `https://www.google.com/?authuser=1`：应无刷新变为 `https://www.google.com/`，再试地区站首页。末尾 `/` 是根地址的标准写法，不是参数。
+4. 如果仅地区站没有跳转，可能是历史/循环保护或会话存储限制正在保护导航。不要通过重复安装或关闭安全保护来强制连续跳转。
+
 ## 范围与验证
 
 所检查的 [wBlock 元数据解析器](https://github.com/0xCUB3/wBlock/blob/9aef8131b26e8b99ce470a9b999155b53946a1f8/wBlockCoreService/UserScript.swift) 读取 `@match`、`@run-at`、`@grant` 和 `@noframes`；其匹配代码支持本脚本的精确主机 HTTP/HTTPS 模式。所检查的 [iOS 注入器](https://github.com/0xCUB3/wBlock/blob/9aef8131b26e8b99ce470a9b999155b53946a1f8/wBlock%20Scripts%20(iOS)/Resources/userscript-injector.js) 处理 `document-start`、`none` 和框架排除。实际注入时机与页面世界行为仍受 Safari、CSP 和已安装 wBlock 版本影响；`document-start` 不保证早于首次请求或每个页面脚本执行。
