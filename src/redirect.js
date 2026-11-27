@@ -64,13 +64,16 @@
         return url;
     }
 
+    function isHomepage(url) {
+        return ['/', '/webhp', '/webhp/'].includes(url.pathname) &&
+            !url.searchParams.getAll('q').some(q => q.trim());
+    }
+
     function destination(url) {
         const target = new URL(url.href);
         target.protocol = 'https:';
         target.hostname = TARGET;
-        const homepage = ['/', '/webhp', '/webhp/'].includes(target.pathname) &&
-            !target.searchParams.getAll('q').some(q => q.trim());
-        if (homepage) {
+        if (isHomepage(target)) {
             // A plain homepage needs no account, locale, tracking or fragment state.
             // Keep root/webhp query searches on the normal lossless search path.
             target.pathname = '/';
@@ -223,10 +226,28 @@
         }
     }
 
+    // Same-origin homepage cleanup is safe even for restored history entries.
+    // Never reload, navigate across origins, poll, or replace native History APIs.
+    function cleanHomepageAddress() {
+        if (!SETTINGS.cleanAddressBar || document.prerendering) return;
+        const source = eligible(window.location.href);
+        if (!source || source.protocol !== 'https:' || source.hostname !== TARGET ||
+            !isHomepage(source)) return;
+        const target = destination(source);
+        if (target.href === source.href) return;
+        try { window.history.replaceState(window.history.state, '', target.href); }
+        catch { /* No fallback reload if History API access is restricted. */ }
+    }
+    document.addEventListener('DOMContentLoaded', cleanHomepageAddress, { once: true });
+    window.addEventListener('pageshow', cleanHomepageAddress);
+    window.addEventListener('popstate', cleanHomepageAddress);
+    window.addEventListener('hashchange', cleanHomepageAddress);
+
     let activated = false;
     function activate() {
         if (activated || document.prerendering) return;
         activated = true;
+        cleanHomepageAddress();
         try {
             const nav = performance.getEntriesByType('navigation')[0];
             if (nav && nav.type === 'back_forward') return;

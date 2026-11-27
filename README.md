@@ -7,6 +7,7 @@ A lightweight userscript for streamlined Google search navigation.
 ## Features
 
 - Normalizes eligible Google search pages and cleans selected query parameters without reloading results solely for cleanup.
+- Homepages (`/` or `/webhp`, without a non-empty `q`) become `https://www.google.com/` with **all** query parameters and fragments removed, including `authuser` and `client`. Canonical homepage cleanup also runs on page/history restoration without reloading.
 - Updates search links on demand and locally unwraps known Google result redirects, up to three layers.
 - Preserves search settings, remaining query encoding, duplicate parameters, and fragments. Eligible GET forms are cleaned through native `formdata`.
 - Provides per-tab, per-origin loop protection; does not download domain lists or upload search terms.
