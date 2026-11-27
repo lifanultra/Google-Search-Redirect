@@ -68,7 +68,17 @@
         const target = new URL(url.href);
         target.protocol = 'https:';
         target.hostname = TARGET;
-        target.search = filteredSearch(target.search, removeKey);
+        const homepage = ['/', '/webhp', '/webhp/'].includes(target.pathname) &&
+            !target.searchParams.getAll('q').some(q => q.trim());
+        if (homepage) {
+            // A plain homepage needs no account, locale, tracking or fragment state.
+            // Keep root/webhp query searches on the normal lossless search path.
+            target.pathname = '/';
+            target.search = '';
+            target.hash = '';
+        } else {
+            target.search = filteredSearch(target.search, removeKey);
+        }
         return target;
     }
 
