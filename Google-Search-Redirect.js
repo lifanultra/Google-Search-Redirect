@@ -2,7 +2,7 @@
 // @name         Google Search Redirect
 // @name:zh-CN   Google 搜索域名重定向
 // @namespace    https://github.com/lifanultra
-// @version      2026.11.27.1232
+// @version      2026.11.27.1241
 // @description  Direct Google search navigation with safe optional parameter cleanup and no cleanup reloads.
 // @description:zh-CN Google 搜索域名直达、可选参数清理；清理地址不刷新，保留搜索功能。
 // @author       LIFANULTRA
@@ -462,7 +462,17 @@
         const target = new URL(url.href);
         target.protocol = 'https:';
         target.hostname = TARGET;
-        target.search = filteredSearch(target.search, removeKey);
+        const homepage = ['/', '/webhp', '/webhp/'].includes(target.pathname) &&
+            !target.searchParams.getAll('q').some(q => q.trim());
+        if (homepage) {
+            // A plain homepage needs no account, locale, tracking or fragment state.
+            // Keep root/webhp query searches on the normal lossless search path.
+            target.pathname = '/';
+            target.search = '';
+            target.hash = '';
+        } else {
+            target.search = filteredSearch(target.search, removeKey);
+        }
         return target;
     }
 

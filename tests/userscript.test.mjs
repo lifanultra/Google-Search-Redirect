@@ -408,3 +408,18 @@ test('SafeRedirect research preserves strict Google host and path boundaries', (
     click(p, a);
     assert.equal(a.href, 'https://www.google.com/search?q=C%2B%2B&hl=zh-CN');
 });
+
+test('homepages without search terms drop all query parameters and fragments', () => {
+    for (const input of [
+        'https://www.google.com.hk/?authuser=1',
+        'https://www.google.com.hk/?client=safari&authuser=1',
+        'https://www.google.com.hk/?hl=zh-CN&foo=bar#home',
+        'https://www.google.com.hk/webhp?authuser=1',
+        'https://www.google.com.hk/?q=&authuser=1',
+    ]) assert.deepEqual(run(input).replacements, ['https://www.google.com/']);
+    const canonical = run('https://www.google.com/?authuser=1&client=safari#home');
+    assert.deepEqual(canonical.replacements, []);
+    assert.equal(canonical.historyChanges[0].url, 'https://www.google.com/');
+    const search = run('https://www.google.com.hk/?q=C%2B%2B&authuser=1&hl=zh-CN');
+    assert.deepEqual(search.replacements, ['https://www.google.com/?q=C%2B%2B&authuser=1&hl=zh-CN']);
+});
