@@ -75,14 +75,14 @@ function click(page, a, extra = {}) {
 }
 
 test('canonical HTTPS never reloads, but removes tracking using history only', () => {
-    const p = run('https://www.google.com/search?q=C%2B%2B%20%E6%9D%90%E6%96%99&utm_source=test&client=safari&hl=zh-CN#top');
+    const p = run('https://www.google.com/search?q=C%2B%2B%20%E6%9D%90%E6%96%99&utm_source=test&client=safari&hl=zh-CN#top', { settings: { cleanClient: false } });
     assert.deepEqual(p.replacements, []);
     assert.equal(p.historyChanges.length, 1);
     assert.equal(p.historyChanges[0].url, 'https://www.google.com/search?q=C%2B%2B%20%E6%9D%90%E6%96%99&client=safari&hl=zh-CN#top');
     assert.equal(p.historyChanges[0].state, p.state);
 });
 test('canonical clean URL does not read storage or rewrite history', () => {
-    const p = run('https://www.google.com/search?q=test&client=safari', { storageDenied: true });
+    const p = run('https://www.google.com/search?q=test&client=safari', { storageDenied: true, settings: { cleanClient: false } });
     assert.equal(p.historyChanges.length, 0);
     assert.equal(p.replacements.length, 0);
     assert.equal(p.listeners.get('click')?.length, 1);
@@ -157,7 +157,7 @@ test('delegated links fix subsequent Google search requests without owning navig
     const p = run('https://www.google.com/search?q=x');
     const a = anchor('https://google.co.jp/search?q=next&utm_source=x&client=safari');
     click(p, a, { ctrlKey: true });
-    assert.equal(a.href, 'https://www.google.com/search?q=next&client=safari');
+    assert.equal(a.href, 'https://www.google.com/search?q=next');
     assert.equal(p.replacements.length, 0);
     const typo = anchor('https://Google.con/search?q=test');
     click(p, typo);
@@ -205,7 +205,7 @@ test('native GET payload is cleaned without modifying target or controls', () =>
     p.dispatch('formdata', { target: f, formData: data });
     assert.equal(f.action, 'https://google.co.jp/search');
     assert.equal(data.get('q'), 'C++'); assert.equal(data.has('utm_source'), false);
-    assert.equal(data.get('client'), 'safari');
+    assert.equal(data.has('client'), false);
     assert.equal(q.value, 'C++'); assert.equal(p.replacements.length, 0);
 });
 test('POST, non-self forms and unsupported submitter overrides stay untouched', () => {
@@ -380,9 +380,31 @@ test('all 188 official suffixes agree between runtime and exact metadata', () =>
     for (const suffix of suffixes) for (const host of [`google.${suffix}`, `www.google.${suffix}`]) {
         const href = `https://${host}/search?q=C%2B%2B&client=safari&gws_rd=cr`;
         const p = run(href);
-        const expected = 'https://www.google.com/search?q=C%2B%2B&client=safari&gws_rd=cr';
+        const expected = 'https://www.google.com/search?q=C%2B%2B&gws_rd=cr';
         assert.deepEqual(p.replacements, host === 'www.google.com' ? [] : [expected], host);
         const pattern = host === 'www.google.com' ? 'https://www.google.com/*' : `*://${host}/*`;
         assert.ok(original.includes(`// @match        ${pattern}`), pattern);
     }
+});
+
+test('client cleanup defaults on and can be explicitly disabled', () => {
+    const url = 'https://www.google.com/search?q=x&client=safari&sourceid=chrome&rls=en&hl=zh-CN';
+    const normal = run(url);
+    assert.equal(normal.historyChanges[0]?.url, 'https://www.google.com/search?q=x&hl=zh-CN');
+    assert.equal(normal.replacements.length, 0);
+    const disabled = run(url, { settings: { cleanClient: false } });
+    assert.equal(disabled.historyChanges.length + disabled.replacements.length, 0);
+});
+
+test('SafeRedirect research preserves strict Google host and path boundaries', () => {
+    const p = run('https://www.google.com/search?q=x');
+    for (const href of ['https://google.cn.evil.example/search?q=x',
+        'https://google.cn@evil.example/search?q=x',
+        'https://wwwXgoogle.cn/search?q=x',
+        'https://maps.google.cn/search?q=x']) {
+        const a = anchor(href); click(p, a); assert.equal(a.href, href);
+    }
+    const a = anchor('https://www.google.cn/search?q=C%2B%2B&client=safari&hl=zh-CN');
+    click(p, a);
+    assert.equal(a.href, 'https://www.google.com/search?q=C%2B%2B&hl=zh-CN');
 });

@@ -32,6 +32,6 @@
  * https://raw.githubusercontent.com/Smile4ever/Neat-URL/630181f17fb48b484d83b450dcd256577baaeb9d/src/core/clean.js
  * AdguardTeam/AdguardFilters — Path-scoped cleanup; preserve encoding and compatibility parameters.
  * https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/2fdc51144fd57bf6c8815a2de98032c84a71ff80/TrackParamFilter/sections/specific.txt
- * Google unusual-traffic guidance: no userscript guarantee of CAPTCHA prevention.
- * https://support.google.com/websearch/answer/86640?hl=zh-Hans
+ * blackmatrix7 SafeRedirect — Google entry-point rewrite; request-layer scope differs.
+ * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/0b6897dc17e0c513d25449c935a9694818e32f0c/rewrite/Loon/SafeRedirect/SafeRedirect.plugin
  */

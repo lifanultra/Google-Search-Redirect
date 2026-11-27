@@ -1,6 +1,5 @@
 {
   "name": "google-search-redirect",
-  "version": "4.0.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22" },

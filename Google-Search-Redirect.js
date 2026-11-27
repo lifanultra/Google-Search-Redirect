@@ -2,7 +2,7 @@
 // @name         Google Search Redirect
 // @name:zh-CN   Google 搜索域名重定向
 // @namespace    https://github.com/lifanultra
-// @version      4.0.0
+// @version      2026.11.27.1232
 // @description  Direct Google search navigation with safe optional parameter cleanup and no cleanup reloads.
 // @description:zh-CN Google 搜索域名直达、可选参数清理；清理地址不刷新，保留搜索功能。
 // @author       LIFANULTRA
@@ -399,7 +399,7 @@
     // Edit these switches in your installed script if desired. No remote settings.
     const SETTINGS = Object.freeze({
         cleanTracking: true, // utm_* only; not a general tracking blocker
-        cleanClient: false, // opt-in: client, sourceid, rls
+        cleanClient: true, // remove client, sourceid, rls; set false to preserve
         cleanAddressBar: true, // same-origin history update, NEVER a reload
         fixLinkTypos: true, // exact google.con links, NOT address-bar DNS failures
         directResultLinks: true, // known Google /url wrappers only; no network resolver
@@ -449,8 +449,7 @@
         if (!['http:', 'https:'].includes(url.protocol) ||
             url.username || url.password || url.port) return null;
         if (!googleHost(url.hostname, allowTypo)) return null;
-        // 验证码/同意/账号/API 流程不在此白名单；绝不解析 continue 重试、
-        // 轮换地区主机或隐藏验证界面。减少脚本自身重复请求不等于绕过风控。
+        // Restrict processing to the known Google search entry paths.
         if (!['/', '/webhp', '/webhp/', '/search', '/search/'].includes(url.pathname)) return null;
         // URL alone cannot reveal an original POST body. Only explicit query searches
         // are eligible for automatic /search normalization; native POST forms are skipped.
@@ -669,6 +668,6 @@
  * https://raw.githubusercontent.com/Smile4ever/Neat-URL/630181f17fb48b484d83b450dcd256577baaeb9d/src/core/clean.js
  * AdguardTeam/AdguardFilters — Path-scoped cleanup; preserve encoding and compatibility parameters.
  * https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/2fdc51144fd57bf6c8815a2de98032c84a71ff80/TrackParamFilter/sections/specific.txt
- * Google unusual-traffic guidance: no userscript guarantee of CAPTCHA prevention.
- * https://support.google.com/websearch/answer/86640?hl=zh-Hans
+ * blackmatrix7 SafeRedirect — Google entry-point rewrite; request-layer scope differs.
+ * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/0b6897dc17e0c513d25449c935a9694818e32f0c/rewrite/Loon/SafeRedirect/SafeRedirect.plugin
  */

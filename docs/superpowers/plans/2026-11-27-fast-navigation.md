@@ -13,7 +13,7 @@
 ## Global constraints
 - No timers, remote runtime dependencies, polling, search telemetry, all-web userscript access, cookie modification, global network/history prototype patches, or tracking cleanup reloads.
 - Canonical HTTPS Google does not get a document reload. Only known hosts and exact home/search paths. Unknown parameters, encodings, fragments, functional filters and account selection survive.
-- Default cleanup: only utm_* on ordinary search links. Client/source cleanup is opt-in via a small editable SETTINGS object. Current loaded URL cleanup uses replaceState only, preserving history.state.
+- Default cleanup covers utm_* and client/source identifiers; either can be disabled via SETTINGS. Current loaded URL cleanup uses replaceState only, preserving history.state.
 - GET forms only; skip POST, non-self target forms, form overrides that cannot be safely supported. Native link navigation and history remain native. No DOM scans or MutationObserver.
 - Exact google.con/www.google.con typo correction is limited to links/forms the script sees; address-bar correction requires the optional request-layer extension. No claim of measured real-world speed improvement.
 - Retain bounded fail-safe loop protection without limiting distinct rapid searches, separate navigation guards from event installation, handle prerender activation and BFCache without repeat forced navigation.
@@ -43,6 +43,5 @@
 - Actual WebKit navigation review disproved changing form action in formdata. Final userscript never writes form action or re-submits; only cleans approved serialized GET payload after submit dispatch. Request-layer routing is optional and separate.
 - Added bounded known Google /url link extraction and contextmenu preparation; no external business-field recursion, network resolver or default-action takeover.
 - Loop identity ignores known telemetry/order/fragment variation for 120s, preserves functional filters and actual query bytes; no distinct-search global counter.
-- Investigated three CAPTCHA scripts and Google official guidance: no reliable target-environment prevention established, so no automatic bypass/host rotation/solver. Strict verification-flow exclusions retained and tested.
 - First complete 44-case suite passed. Final browser fixture initially hung due synthetic external anchor activation; the fixture now cancels that default action after verifying product did not cancel. Eleven WebKit DOM fixture checks passed; these are not real-Google/script-manager/signed-extension or speed tests.
 - Independent final source review found no new Critical/Important runtime blocker; stale artifact noted during parallel review has been rebuilt and checked. A final full run with 188-suffix main-runtime matrix precedes publication.
