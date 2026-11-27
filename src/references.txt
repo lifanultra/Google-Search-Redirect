@@ -1,0 +1,37 @@
+/*
+ * 参考文献 / References — researched 2026-11-27.
+ * Strategy research and counterexamples only; independently implemented.
+ * No upstream implementation copied; no runtime dependencies or remote fetching.
+ * 学习不等于整套合并；限定 Google 搜索，不改账号/邮箱/地图的服务主机。
+ * ScriptCat 1706 / 重定向链接 v0.1 / SHA256 1370614193dcb2f7898bff36b2d602c6d4a9ae6656289627e08ac675e2e0468d
+ * https://scriptcat.org/scripts/code/1706/%E9%87%8D%E5%AE%9A%E5%90%91%E9%93%BE%E6%8E%A5.user.js
+ * 精确已知入口；不照搬重复解码或缺少协议校验。
+ * ScriptCat 5392 / 网页重定向 v2.6.2 / SHA256 84b7b0f5bea62bf055725cc02a83968c7edcc326747051bc2c35eb64c06599e9
+ * https://scriptcat.org/scripts/code/5392/%E7%BD%91%E9%A1%B5%E9%87%8D%E5%AE%9A%E5%90%91.user.js
+ * 开关与幂等；不采用全局导航/表单/原型劫持。
+ * ScriptCat 8937 / Auto Redirect Purifier (自动重定向净化) v3.4 / SHA256 c9f36ba76f71434ace187a5f92cfa7f9a5be063b2a6862f831202dbf0631827e
+ * https://scriptcat.org/scripts/code/8937/Auto%20Redirect%20Purifier%20(%E8%87%AA%E5%8A%A8%E9%87%8D%E5%AE%9A%E5%90%91%E5%87%80%E5%8C%96).user.js
+ * 本地有界解包；不猜 DOM 目标、不全站递归解包。
+ * ScriptCat 5462 / 移动端去除链接重定向 v1.5 / SHA256 21aa622dda21eec32503918f4aa45b6f3ef61728cc4ce9504013cbc8fe9ed346
+ * https://scriptcat.org/scripts/code/5462/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E5%8E%BB%E9%99%A4%E9%93%BE%E6%8E%A5%E9%87%8D%E5%AE%9A%E5%90%91.user.js
+ * 有界状态思想；不引入联网兜底、全页扫描或点击接管。
+ * ScriptCat 3053 / 兔小巢首页阻止重定向 v2025-03-30 / SHA256 d6a74b977f7349b7889cfc930c3954141ef5045fab493701f805e988038f0534
+ * https://scriptcat.org/scripts/code/3053/%E5%85%94%E5%B0%8F%E5%B7%A2%E9%A6%96%E9%A1%B5%E9%98%BB%E6%AD%A2%E9%87%8D%E5%AE%9A%E5%90%91.user.js
+ * 按站点范围处理；不采用设备特征或字符串原型伪装。
+ * ScriptCat 3211 / 跳转链接修复（移除重定向外链直达） v2.27.0 / SHA256 8480c34c3723f6964b688b4cff9bd2e6cccb06d5943d31f2cb0c07af26e90566
+ * https://scriptcat.org/scripts/code/3211/%E8%B7%B3%E8%BD%AC%E9%93%BE%E6%8E%A5%E4%BF%AE%E5%A4%8D%EF%BC%88%E7%A7%BB%E9%99%A4%E9%87%8D%E5%AE%9A%E5%90%91%E5%A4%96%E9%93%BE%E7%9B%B4%E8%BE%BE%EF%BC%89.user.js
+ * 区分页面导航与外链处理；保留原生点击，独立实现协议/域名校验。
+ * ScriptCat 2567 / No Google vignette v0.1.0 / SHA256 f171056d57be9d1b76c20bda1f62160d84ba249e00a88da3ae939e08a343a514
+ * https://scriptcat.org/scripts/code/2567/No%20Google%20vignette.user.js
+ * 明确触发标记；不通过重载/路径截断或盲删节点清理地址。
+ * tunggian/google-search-ncr — Validate scope; avoid an extra NCR bootstrap hop.
+ * https://raw.githubusercontent.com/tunggian/google-search-ncr/218b2742163248e928033ee3e4250ab68aa13586/google-search-ncr.user.js
+ * ClearURLs/Rules — Separate exceptions, cleanup and redirect extraction.
+ * https://raw.githubusercontent.com/ClearURLs/Rules/7c30a16c37c13526bd43eead3135459e79975585/data.min.json
+ * Smile4ever/Neat-URL — Preserve raw query bytes and duplicate fields.
+ * https://raw.githubusercontent.com/Smile4ever/Neat-URL/630181f17fb48b484d83b450dcd256577baaeb9d/src/core/clean.js
+ * AdguardTeam/AdguardFilters — Path-scoped cleanup; preserve encoding and compatibility parameters.
+ * https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/2fdc51144fd57bf6c8815a2de98032c84a71ff80/TrackParamFilter/sections/specific.txt
+ * Google unusual-traffic guidance: no userscript guarantee of CAPTCHA prevention.
+ * https://support.google.com/websearch/answer/86640?hl=zh-Hans
+ */

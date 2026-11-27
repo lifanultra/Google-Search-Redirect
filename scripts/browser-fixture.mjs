@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const source = readFileSync(resolve(root, 'Google-Search-Redirect.js'), 'utf8');
+const harness = readFileSync(resolve(root, 'tests/browser-harness.js'), 'utf8');
+const limit = Number(process.argv[2] || 100);
+if (!Number.isInteger(limit) || limit < 1) throw Error('Expected a positive check limit');
+const script = `window.__maxChecks = ${limit}; window.__userscript = ${JSON.stringify(source)};\n${harness}`.replace(/<\/script/gi, '<\\/script');
+writeFileSync(resolve(root, 'tests/browser.generated.html'), `<!doctype html><meta charset="utf-8"><title>Google Search Redirect DOM checks</title><h1>Native DOM integration checks</h1><p>No real Google navigation or network benchmark.</p><pre>Running…</pre><script>${script}</script>`);
+console.log('Generated tests/browser.generated.html');
