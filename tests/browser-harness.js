@@ -152,6 +152,32 @@
         equal(cancelledByProduct, false);
         equal(a.href, target); equal(p.navigations.length, 0);
     });
+    check('homepage fragment-only links remain native in-page links', () => {
+        const p = page('https://www.google.com/');
+        const a = p.doc.createElement('a');
+        a.setAttribute('href', '#footer'); p.doc.body.append(a);
+        let cancelledByProduct = null;
+        a.addEventListener('click', event => {
+            cancelledByProduct = event.defaultPrevented;
+            event.preventDefault(); // Fixture only: no navigation out of the test.
+        });
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        equal(a.getAttribute('href'), '#footer');
+        equal(cancelledByProduct, false); equal(p.navigations.length, 0);
+    });
+    check('result wrappers preserve inherited and explicit-empty target fragments', () => {
+        for (const [target, fragment, expected] of [
+            ['https://example.test/article', '#section', 'https://example.test/article#section'],
+            ['https://example.test/article', '#:~:text=important', 'https://example.test/article#:~:text=important'],
+            ['https://example.test/article#', '#outer', 'https://example.test/article#'],
+        ]) {
+            const p = page(); const a = p.doc.createElement('a');
+            a.href = 'https://www.google.com/url?q=' + encodeURIComponent(target) + fragment;
+            p.doc.body.append(a);
+            a.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }));
+            equal(a.href, expected); equal(p.navigations.length, 0);
+        }
+    });
     window.browserResults = { passed: checks.filter(x => x.passed).length, failed: checks.filter(x => !x.passed).length, checks };
     document.querySelector('pre').textContent = JSON.stringify(window.browserResults, null, 2);
 })();

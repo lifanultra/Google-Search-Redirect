@@ -2,7 +2,7 @@
 // @name         Google Search Redirect
 // @name:zh-CN   Google 搜索域名重定向
 // @namespace    https://github.com/lifanultra
-// @version      2026.11.27.1255
+// @version      2026.11.27.1306
 // @description  Direct Google search navigation with safe optional parameter cleanup and no cleanup reloads.
 // @description:zh-CN Google 搜索域名直达、可选参数清理；清理地址不刷新，保留搜索功能。
 // @author       LIFANULTRA
@@ -494,7 +494,15 @@
             // again, guess DOM buttons, or interpret url/q fields on an external site.
             const candidates = new Set([...url.searchParams.getAll('url'), ...url.searchParams.getAll('q')].filter(Boolean));
             if (candidates.size !== 1) return null;
-            try { url = new URL([...candidates][0]); } catch { return null; }
+            try {
+                const next = new URL([...candidates][0]);
+                // Match HTTP redirect fragment inheritance. An explicit target '#'
+                // (including an empty fragment) wins over the wrapper's fragment.
+                if (!next.href.includes('#') && url.href.includes('#')) {
+                    next.hash = url.href.slice(url.href.indexOf('#'));
+                }
+                url = next;
+            } catch { return null; }
             changed = true;
         }
         if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port ||
@@ -518,7 +526,7 @@
         }
         if (!link || link.hasAttribute('download')) return;
         const raw = link.getAttribute('href');
-        if (!raw) return;
+        if (!raw || raw.trimStart().startsWith('#')) return;
         const unwrapped = unwrapResult(raw, document.baseURI);
         const url = eligible(unwrapped ? unwrapped.href : raw, document.baseURI, true);
         if (!url && !unwrapped) return;

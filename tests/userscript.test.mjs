@@ -483,3 +483,40 @@ test('homepage lifecycle cleanup respects opt-out and prerendering', () => {
     preview.dispatch('prerenderingchange');
     assert.equal(preview.window.location.href, 'https://www.google.com/');
 });
+
+test('fragment-only homepage links retain native in-page behavior instead of becoming reloads', () => {
+    for (const raw of ['#', '#settings', '  #footer']) {
+        const p = run('https://www.google.com/');
+        const a = anchor(raw);
+        click(p, a);
+        assert.equal(a.href, raw, raw);
+        p.dispatch('contextmenu', { target: a, composedPath: () => [a], button: 2 });
+        assert.equal(a.href, raw, 'context menu must retain the native fragment');
+        assert.equal(p.replacements.length + p.historyChanges.length, 0);
+    }
+});
+
+test('result unwrapping inherits wrapper fragments without replacing an explicit target fragment', () => {
+    const cases = [
+        ['/url?q=https%3A%2F%2Fexample.test%2Farticle#section-2', 'https://example.test/article#section-2'],
+        ['/url?url=https%3A%2F%2Fexample.test%2Farticle#:~:text=important', 'https://example.test/article#:~:text=important'],
+        ['/url?q=https%3A%2F%2Fexample.test%2Farticle%23own#outer', 'https://example.test/article#own'],
+        ['/url?q=https%3A%2F%2Fexample.test%2Farticle%23#outer', 'https://example.test/article#'],
+        ['/url?q=https%3A%2F%2Fexample.test%2Farticle#', 'https://example.test/article#'],
+    ];
+    const inner = 'https://www.google.com/url?q=' + encodeURIComponent('https://example.test/article?x=%2f') + '#inner';
+    cases.push(['/url?q=' + encodeURIComponent(inner) + '#outer', 'https://example.test/article?x=%2f#inner']);
+    const emptyInner = 'https://www.google.com/url?q=' + encodeURIComponent('https://example.test/article') + '#';
+    cases.push(['/url?q=' + encodeURIComponent(emptyInner) + '#outer', 'https://example.test/article#']);
+    for (const [raw, expected] of cases) {
+        for (const [type, button] of [['click', 0], ['auxclick', 1], ['contextmenu', 2]]) {
+            const p = run('https://www.google.com/search?q=test');
+            const a = anchor(raw);
+            const event = { target: a, composedPath: () => [a], button, defaultPrevented: false };
+            p.dispatch(type, event);
+            assert.equal(a.href, expected, `${type}: ${raw}`);
+            assert.equal(event.defaultPrevented, false);
+            assert.equal(p.replacements.length, 0);
+        }
+    }
+});

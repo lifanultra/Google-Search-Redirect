@@ -100,7 +100,15 @@
             // again, guess DOM buttons, or interpret url/q fields on an external site.
             const candidates = new Set([...url.searchParams.getAll('url'), ...url.searchParams.getAll('q')].filter(Boolean));
             if (candidates.size !== 1) return null;
-            try { url = new URL([...candidates][0]); } catch { return null; }
+            try {
+                const next = new URL([...candidates][0]);
+                // Match HTTP redirect fragment inheritance. An explicit target '#'
+                // (including an empty fragment) wins over the wrapper's fragment.
+                if (!next.href.includes('#') && url.href.includes('#')) {
+                    next.hash = url.href.slice(url.href.indexOf('#'));
+                }
+                url = next;
+            } catch { return null; }
             changed = true;
         }
         if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port ||
@@ -124,7 +132,7 @@
         }
         if (!link || link.hasAttribute('download')) return;
         const raw = link.getAttribute('href');
-        if (!raw) return;
+        if (!raw || raw.trimStart().startsWith('#')) return;
         const unwrapped = unwrapResult(raw, document.baseURI);
         const url = eligible(unwrapped ? unwrapped.href : raw, document.baseURI, true);
         if (!url && !unwrapped) return;

@@ -13,6 +13,13 @@ This is the existing userscript, not a wBlock filter list or a second installati
 
 The script's `@downloadURL` and `@updateURL` use the same fixed URL. Update behavior depends on your wBlock version and settings; check the installed script after updates. This URL follows the repository's `main` branch, not a pinned release, so inspect changes and trust the publisher before importing or updating.
 
+## If homepage parameters remain
+
+1. Update the **existing** installed script and compare its `@version` with the [latest release](https://github.com/lifanultra/Google-Search-Redirect/releases/latest). Publishing on GitHub does not update an already-open Safari page or guarantee that a manager has fetched the new script.
+2. Check both the regional site and `www.google.com` have Scripts-extension permission; keep `cleanAddressBar: true`. A content blocker alone does not run this script.
+3. Reload the page or open a fresh tab, rather than only returning to an old cached tab. Test `https://www.google.com/?authuser=1` first: it should become `https://www.google.com/` without a reload. Then test the regional homepage. The trailing `/` is the standard root-URL form, not a parameter.
+4. If only regional routing is skipped, the history/loop guard or blocked session storage may be protecting navigation. Do not install duplicate copies or disable safety guards to force repeated redirects.
+
 ## Scope and verification
 
 The reviewed [metadata parser](https://github.com/0xCUB3/wBlock/blob/9aef8131b26e8b99ce470a9b999155b53946a1f8/wBlockCoreService/UserScript.swift) reads `@match`, `@run-at`, `@grant`, and `@noframes`; its matching code supports the script's exact-host HTTP/HTTPS patterns. The reviewed [iOS injector](https://github.com/0xCUB3/wBlock/blob/9aef8131b26e8b99ce470a9b999155b53946a1f8/wBlock%20Scripts%20(iOS)/Resources/userscript-injector.js) handles `document-start`, `none` and frame exclusion. Actual injection timing and page-world behavior still depend on Safari, CSP and the installed wBlock build; `document-start` is not a guarantee of execution before the first request or every page script.
