@@ -34,10 +34,14 @@ export function run(href, options = {}) {
     };
     const location = { href, replace(value) { replacements.push(value); } };
     const window = {
+        addEventListener: document.addEventListener,
         location, document,
         history: {
             state,
-            replaceState(value, unused, url) { historyChanges.push({ state: value, url }); },
+            replaceState(value, unused, url) {
+                historyChanges.push({ state: value, url });
+                location.href = new URL(url, location.href).href;
+            },
         },
         sessionStorage: {
             getItem(key) { if (options.storageDenied) throw Error('denied'); return storage.get(key) || null; },
@@ -422,4 +426,60 @@ test('homepages without search terms drop all query parameters and fragments', (
     assert.equal(canonical.historyChanges[0].url, 'https://www.google.com/');
     const search = run('https://www.google.com.hk/?q=C%2B%2B&authuser=1&hl=zh-CN');
     assert.deepEqual(search.replacements, ['https://www.google.com/?q=C%2B%2B&authuser=1&hl=zh-CN']);
+});
+
+test('all three reported homepage URLs become exactly the clean canonical root', () => {
+    for (const href of [
+        'https://www.google.com.hk/?authuser=1',
+        'https://www.google.com/?authuser=1',
+        'https://www.google.com.hk/?client=safari&authuser=1',
+    ]) {
+        const p = run(href);
+        assert.equal(p.replacements[0] || p.historyChanges[0]?.url, 'https://www.google.com/', href);
+    }
+});
+test('canonical homepage is cleaned on back-forward loads without navigation or storage', () => {
+    const p = run('https://www.google.com/?authuser=1&unknown=x#home', {
+        navType: 'back_forward', storageDenied: true,
+    });
+    assert.equal(p.window.location.href, 'https://www.google.com/');
+    assert.deepEqual(p.replacements, []);
+    assert.equal(p.historyChanges[0]?.state, p.state);
+});
+test('homepage lifecycle cleanup removes parameters reintroduced after initial execution', () => {
+    const p = run('https://www.google.com/');
+    for (const type of ['DOMContentLoaded', 'pageshow', 'popstate', 'hashchange']) {
+        p.window.location.href = 'https://www.google.com/?authuser=1&client=safari&x=y#home';
+        p.dispatch(type, { persisted: true });
+        assert.equal(p.window.location.href, 'https://www.google.com/', type);
+        const count = p.historyChanges.length;
+        p.dispatch(type);
+        assert.equal(p.historyChanges.length, count, 'clean homepage is a no-op');
+    }
+    assert.deepEqual(p.replacements, []);
+});
+test('homepage lifecycle cleanup leaves searches, other services and regional history alone', () => {
+    const p = run('https://www.google.com/');
+    for (const href of [
+        'https://www.google.com/search?q=C%2B%2B&authuser=1&udm=2',
+        'https://www.google.com/?q=C%2B%2B&authuser=1',
+        'https://www.google.com/maps?authuser=1',
+        'https://www.google.com.hk/?authuser=1',
+    ]) {
+        p.window.location.href = href;
+        p.dispatch('pageshow', { persisted: true });
+        assert.equal(p.window.location.href, href);
+    }
+    assert.equal(p.historyChanges.length + p.replacements.length, 0);
+});
+test('homepage lifecycle cleanup respects opt-out and prerendering', () => {
+    const p = run('https://www.google.com/?authuser=1', { settings: { cleanAddressBar: false } });
+    p.dispatch('pageshow');
+    assert.equal(p.historyChanges.length, 0);
+    const preview = run('https://www.google.com/?authuser=1', { prerendering: true });
+    preview.dispatch('pageshow');
+    assert.equal(preview.historyChanges.length, 0);
+    preview.document.prerendering = false;
+    preview.dispatch('prerenderingchange');
+    assert.equal(preview.window.location.href, 'https://www.google.com/');
 });

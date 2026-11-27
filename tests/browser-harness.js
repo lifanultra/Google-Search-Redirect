@@ -16,9 +16,15 @@
         const navigations = [], changes = [];
         const store = new Map();
         const state = { preserved: true };
+        const events = new EventTarget();
         const win = {
+            addEventListener: events.addEventListener.bind(events),
+            dispatchEvent: events.dispatchEvent.bind(events),
             location: { href, replace: value => navigations.push(value) },
-            history: { state, replaceState: (value, unused, url) => changes.push({ state: value, url }) },
+            history: { state, replaceState: (value, unused, url) => {
+                changes.push({ state: value, url });
+                win.location.href = new URL(url, win.location.href).href;
+            } },
             sessionStorage: { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value) },
         };
         win.self = win; win.top = win;
@@ -40,6 +46,30 @@
         equal(p.navigations.length, 0); equal(p.changes.length, 1);
         equal(p.changes[0].url, 'https://www.google.com/search?q=C%2B%2B%20%E4%B8%AD%E6%96%87#top');
         equal(p.changes[0].state, p.state);
+    });
+    check('reported homepages discard every parameter and fragment', () => {
+        for (const href of [
+            'https://www.google.com.hk/?authuser=1',
+            'https://www.google.com/?authuser=1',
+            'https://www.google.com.hk/?client=safari&authuser=1',
+            'https://www.google.com/webhp?unknown=x&authuser=1#home',
+        ]) {
+            const p = page(href);
+            equal(p.navigations[0] || p.changes[0]?.url, 'https://www.google.com/');
+        }
+    });
+    check('native page and history events re-clean only the canonical homepage', () => {
+        const p = page('https://www.google.com/');
+        for (const type of ['pageshow', 'popstate', 'hashchange']) {
+            p.win.location.href = 'https://www.google.com/?client=safari&authuser=1#home';
+            p.win.dispatchEvent(new Event(type));
+            equal(p.win.location.href, 'https://www.google.com/');
+            equal(p.changes[p.changes.length - 1].state, p.state);
+        }
+        p.win.location.href = 'https://www.google.com/search?q=C%2B%2B&authuser=1';
+        p.win.dispatchEvent(new Event('pageshow'));
+        equal(p.win.location.href, 'https://www.google.com/search?q=C%2B%2B&authuser=1');
+        equal(p.navigations.length, 0);
     });
     check('native bubbling click handles nested anchor without cancelling', () => {
         const p = page();
