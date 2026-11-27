@@ -5,7 +5,7 @@
     // Edit these switches in your installed script if desired. No remote settings.
     const SETTINGS = Object.freeze({
         cleanTracking: true, // utm_* only; not a general tracking blocker
-        cleanClient: false, // opt-in: client, sourceid, rls
+        cleanClient: true, // remove client, sourceid, rls; set false to preserve
         cleanAddressBar: true, // same-origin history update, NEVER a reload
         fixLinkTypos: true, // exact google.con links, NOT address-bar DNS failures
         directResultLinks: true, // known Google /url wrappers only; no network resolver
@@ -55,8 +55,7 @@
         if (!['http:', 'https:'].includes(url.protocol) ||
             url.username || url.password || url.port) return null;
         if (!googleHost(url.hostname, allowTypo)) return null;
-        // 验证码/同意/账号/API 流程不在此白名单；绝不解析 continue 重试、
-        // 轮换地区主机或隐藏验证界面。减少脚本自身重复请求不等于绕过风控。
+        // Restrict processing to the known Google search entry paths.
         if (!['/', '/webhp', '/webhp/', '/search', '/search/'].includes(url.pathname)) return null;
         // URL alone cannot reveal an original POST body. Only explicit query searches
         // are eligible for automatic /search normalization; native POST forms are skipped.

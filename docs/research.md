@@ -19,7 +19,7 @@ Also read fixed-commit source files from google-search-ncr, ClearURLs/Rules, Nea
 ## Changes supported by the research
 
 - Preserve raw retained query segments and duplicate fields; clean a small explicit set only.
-- Keep client/source cleanup opt-in, encoding/locale/account/search modes intact.
+- Clean client/source parameters by default; preserve encoding, locale, account and search modes.
 - Prepare clicked/aux-clicked/context-menu Google links without polling, page scans or network resolution.
 - Unwrap at most three *known Google /url wrappers* with exactly one unambiguous target, HTTP(S)/credential/port checks and a visited set. Never reinterpret q/url on the external destination, decode twice, or pick an arbitrary DOM button.
 - Use only identity-time normalization for the per-origin loop guard: known telemetry exclusion, stable key ordering, duplicate-key order preservation and fragment independence. Do not reorder actual outgoing query bytes.
@@ -31,12 +31,10 @@ An independent reviewer exercised actual WebKit `requestSubmit()` and iframe nav
 
 Therefore the userscript **never rewrites form action or re-submits a form**. It records qualified GET intent, ignores FormData inspections during submit dispatch, rechecks cancellation/method/effective target/submitter, and only cleans the final serialized payload. Request-layer routing belongs in the optional extension, not an unreliable userscript imitation. Native DOM fixtures cover these lifecycle cases.
 
-## CAPTCHA findings
-
-Read Google unusual-traffic guidance and actual sources for Bypass Google Sorry, Reroute Google CAPTCHA and noCaptchaAi/recaptcha-userscript. The first changes country hosts, the second switches search engine, and the third sends challenge data to an external solving API. None establishes reliable CAPTCHA prevention in the target iPhone Safari environment. They are not integrated.
-
-Retain strict challenge/account/consent exclusions, no auto retries, no background Google probes, no host rotation, no cookie clearing and no external solving calls. These prevent the script from manufacturing extra traffic; they do not prove fewer CAPTCHAs. The 120-second circuit breaker is not a Google-approved search interval.
-
 ## Verification boundaries
 
 Node VM/rule-model tests and native WebKit DOM fixtures are reproducible local correctness checks. They are not real Google, script-manager injection, real-network speed measurements or signed Safari-extension interception tests. The optional request companion requires Safari 26+, Mac/Xcode conversion, signing and user website permissions; no native app is installed by the userscript.
+
+## SafeRedirect: Google rules
+
+The Loon SafeRedirect plugin snapshot `0b6897dc17e0c513d25449c935a9694818e32f0c` contains request-layer 302 rewrites for Google China search and Maps entry points. It does not contain Google result-link extraction or an associated Google JavaScript script. The plugin's URL-pattern and MITM execution model is different from document-start userscripts; this project retains its exact search-host and path allowlists instead of copying network rules or changing Google Maps. The fixed source is recorded in the distributed script's References footer.

@@ -38,7 +38,7 @@
     check('canonical raw URL cleanup preserves state without navigation', () => {
         const p = page('https://www.google.com/search?q=C%2B%2B%20%E4%B8%AD%E6%96%87&utm_source=a&client=safari#top');
         equal(p.navigations.length, 0); equal(p.changes.length, 1);
-        equal(p.changes[0].url, 'https://www.google.com/search?q=C%2B%2B%20%E4%B8%AD%E6%96%87&client=safari#top');
+        equal(p.changes[0].url, 'https://www.google.com/search?q=C%2B%2B%20%E4%B8%AD%E6%96%87#top');
         equal(p.changes[0].state, p.state);
     });
     check('native bubbling click handles nested anchor without cancelling', () => {
@@ -53,7 +53,7 @@
         const p = page();
         const { form, data } = submit(p, '<form action="https://google.de/search"><input name="q" value="C++"><input name="utm_source" value="a"><input name="client" value="safari"></form>');
         equal(form.action, 'https://google.de/search'); equal(data.get('q'), 'C++');
-        equal(data.has('utm_source'), false); equal(data.get('client'), 'safari');
+        equal(data.has('utm_source'), false); equal(data.has('client'), false);
         equal(form.elements.utm_source.disabled, false); equal(form.elements.utm_source.value, 'a');
         // A later independent FormData construction is not globally filtered.
         equal(new FormData(form).get('utm_source'), 'a');

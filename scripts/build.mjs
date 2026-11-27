@@ -4,7 +4,16 @@ import { dirname, resolve } from 'node:path';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const suffixes = JSON.parse(readFileSync(resolve(root, 'config/google-domains.json'), 'utf8'));
-const version = '4.0.0';
+const { version } = JSON.parse(readFileSync(resolve(root, 'config/version.json'), 'utf8'));
+// Four numeric components preserve date/time ordering in userscript managers.
+// Keep zero padding for display; consumers should compare each component numerically.
+const parts = typeof version === 'string' && /^(\d{4})\.(\d{2})\.(\d{2})\.(\d{2})(\d{2})$/.exec(version);
+if (!parts) throw Error('Invalid version: expected YYYY.MM.DD.HHmm');
+const [, y, m, d, h, min] = parts.map(Number);
+const day = new Date(Date.UTC(y, m - 1, d));
+if (y < 1000 || day.getUTCFullYear() !== y || day.getUTCMonth() !== m - 1 || day.getUTCDate() !== d || h > 23 || min > 59) {
+    throw Error('Invalid calendar date or time in version');
+}
 if (new Set(suffixes).size !== suffixes.length || suffixes.some(s => !/^[a-z]+(?:\.[a-z]+)*$/.test(s))) {
     throw Error('Invalid or duplicate Google domain suffix');
 }
